@@ -1,0 +1,39 @@
+version: '3.8'
+
+services:
+
+  # Redis 
+  redis-service:
+    image: redis:7-alpine
+    container_name: redis
+    ports:
+      - "6379:6379"
+
+    volumes:
+      - redis_data:/data
+
+    command: redis-server --appendonly yes
+
+  # Celery
+  celery-service:
+    image: python:3.11.14-alpine3.23
+    container_name: celery-service
+    depends_on:
+      - redis-service
+
+    command: >
+      sh -c "pip install celery redis &&
+           celery -A CeleryClientConfig worker 
+           --loglevel=info 
+           --concurrency=2 
+           --queues=default 
+           --hostname=default_worker@%h"
+    volumes:
+      - ./rail-stream-promo-back/src/main/app/config/CeleryClientConfig.py:/app/CeleryClientConfig.py
+      - ./rail-stream-promo-back/src/main/app/config/CeleryTaskSchema.py:/app/CeleryTaskSchema.py
+      - ./rail-stream-promo-back/src/main/app/config/LoadEnvFile.py:/app/LoadEnvFile.py
+      - ./rail-stream-promo-back/src/infrastructure/conf.env:/app/conf.env
+    working_dir: /app
+
+volumes:
+  redis_data:
