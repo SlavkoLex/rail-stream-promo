@@ -1,8 +1,21 @@
 from celery import Celery
 import os
 
-from CeleryTaskSchema import *
-from LoadEnvFile import load_env_file
+#==============================
+# To work in a Docker container
+# (For Celery worker)
+#==============================
+if os.path.exists('/.dockerenv'):
+    from CeleryTaskSchema import *
+    from LoadEnvFile import load_env_file
+
+#==============================
+# To work in FastAPI app
+#==============================
+else:
+    from .CeleryTaskSchema import *
+    from .LoadEnvFile import load_env_file
+
 
 class CustomCeleryClient:
 
@@ -16,19 +29,22 @@ class CustomCeleryClient:
     
     @classmethod
     def __task_registration_in_specified_queue(cls, clery_client, link_task, key_task, queue):
-        # TODO: Добавить проверку, что передаваемый объет taskLink является ссылкой на ф-цию
         clery_client.task(link_task, name=key_task, queue=queue)
+
+        for k in clery_client.tasks.keys():
+            print(k)
 
 
     @classmethod
     def __init_celery_obj(cls):
 
         #===========================================
-        # Установка переменных окружения
+        # reading and installing variable environments
         load_env_file()
 
-        # Проверка запускаемого пространтсва (Docker или OS)
+        # Checking the running space (Docker or OS)
         if os.path.exists('/.dockerenv'):
+
             broker_url_used = os.getenv('CELERY_BROKER_URL_DOCKER')
             backend_url_used = os.getenv('CELERY_BACKEND_URL_DOCKER')
         else:
@@ -44,14 +60,14 @@ class CustomCeleryClient:
 
         celeryInstance.conf.update(
 
-            # Настройки брокера через Kombu (по умолчанию т.к. при создании об-та Celery автоматом создается Kombu)
-            broker_pool_limit=10,  # Максимум соединений в пуле
-            broker_heartbeat=120,  # Keep-alive
+            # Broker settings via Kombu (by default, because when creating a Celery object, Kombu is automatically created)
+            broker_pool_limit=10,  #
+            broker_heartbeat=120, 
             broker_connection_timeout=4.0,
             broker_connection_retry=True,
             broker_connection_max_retries=3,
             
-            # Настройки Kombu транспорта
+            # Kombu Transport Settings
             broker_transport_options={
                 'visibility_timeout': 3600,  # 1 час
                 'fanout_prefix': True,
@@ -63,13 +79,11 @@ class CustomCeleryClient:
                 'health_check_interval': 30,
             },
             
-            # Сериализация
             task_serializer='json',
             result_serializer='json',
             accept_content=['json'],
             result_accept_content=['json'],
             
-            # Другие настройки
             timezone='Europe/Moscow',
             enable_utc=True,
         )
@@ -86,8 +100,10 @@ class CustomCeleryClient:
 
     def get_celery_object(self):
         return self.__celry_klient
+    
                      
 app = CustomCeleryClient().get_celery_object()
+
 
     
 

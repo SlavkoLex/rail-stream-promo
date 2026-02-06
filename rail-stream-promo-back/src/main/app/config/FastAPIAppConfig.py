@@ -1,20 +1,42 @@
 from fastapi import FastAPI
 from contextlib import asynccontextmanager
 
-from CeleryClientConfig import app
+from . CeleryClientConfig import app
+
+from endpoints.OrderEndpoint import order_router
 
 
 @asynccontextmanager
-async def lifespan(app: FastAPI):
+async def lifespan(app_fastapi):
 
-    # TODO: Создать и настроить объекты Сelery, Mongo, Redis в соотв-щих .py файлах, а далее передать их 
-    # в качестве атрибутов к созданному объекту state
-    app.state.celery = app
+    #============================
+    # Monitoring of the lifecycle 
+    # MongoDB object
+    #============================
+    # .
+    # .
+    # .
+
+    #============================
+    # Monitoring of the lifecycle  
+    # Celery object
+    #============================
+    app_fastapi.state.celery = app
     
     yield
     
-    # Shutdown: закрываем подключения
+    #============================
+    # Close Celery Connections
+    #============================
+    if hasattr(app, 'close'):
+        app.close()
 
 
-app = FastAPI(lifespan=lifespan)
 
+app_fastapi = FastAPI(lifespan=lifespan)
+
+
+#============================
+# Endpoint registration
+#============================
+app_fastapi.include_router(order_router)

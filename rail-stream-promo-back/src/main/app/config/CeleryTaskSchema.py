@@ -5,37 +5,9 @@ import smtplib
 import socket
 
 
-def send_gmail_notification_about_order(**oreder_info):
+def send_gmail_notification_about_order(date_order = None, client_email = None, product = None, organization = None , cient_number = None):
 
 
-    date_order = None
-    client_email = None
-    product = None
-    organization = None 
-    cient_number = None
-
-    for key,value in oreder_info.items():
-        
-        match key:
-
-            case "date_order": 
-                date_order = value
-
-            case "client_email":
-                client_email = value
-
-            case "product": 
-                product = value
-
-            case "organization":
-                organization = value
-
-            case "cient_number":
-                cient_number = value
-
-    #===================================================
-    # Предполагается, что указанные преременные окружения настроены на ур-не OC
-    # (Это стоит учитывать при развертывании Docker контейнера как с Celery так и с самим приложением)
     port = int(os.getenv('PORT_NOTIFIER'))
     host = os.getenv('HOST_NOTIFIER')
 
@@ -43,18 +15,17 @@ def send_gmail_notification_about_order(**oreder_info):
     password = os.getenv('PASSWORD_NOTIFIER')
     receiver_email = sender_email
 
-    #====================================================
-
     body = f"""Отправлена заявка от {date_order} \n
             * email клиента: {client_email} \n
             * Продукт: {product} \n
             * Организация: {organization}\n
             * Контактный номер: {cient_number}"""
+    
 
     message = MIMEMultipart()
     message["From"] = sender_email
     message["To"] = receiver_email
-    message["Subject"] = "Тема Письма"
+    message["Subject"] = "Заказ!"
     message.attach(MIMEText(body, "plain"))
 
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -64,21 +35,20 @@ def send_gmail_notification_about_order(**oreder_info):
     try:
         result = sock.connect_ex((host, port))
         if result == 0:
-            print(f"Порт {port} на {host} открыт")
+            print(f"Port {port} : {host} is Open!")
             status = True
 
             #===============================================
-            # Отправка сообщения на gmail
+            # Sending a message to gmail (Mail Collector)
             #===============================================
             with smtplib.SMTP_SSL(host, port) as server:
                 server.login(sender_email, password)
                 server.sendmail(sender_email, receiver_email, message.as_string())
                 
         else:
-            print(f"Порт {port} на {host} закрыт или недоступен")
+            print(f"Port {port} : {host} closed or unavailable")
     except Exception as e:
-        print(f"Ошибка проверки порта {port}: {e}")
+        print(f"Port verification error! {port}: {e}")
 
     sock.close()
     return status
-
