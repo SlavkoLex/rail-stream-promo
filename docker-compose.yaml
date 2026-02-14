@@ -2,6 +2,25 @@ version: '3.8'
 
 services:
 
+  # MongoDB
+  mongodb-service:
+    image: mongo:latest
+    container_name: mongo
+    restart: unless-stopped
+
+    #============================
+    # Обязателно должен быть init-mongoDB.js в ./rail-stream-promo-back/infrastructure/
+    # с логикой инициализации БД (учитывать при Deployment)
+    #============================
+    volumes:
+      - mongodb_data:/data/db
+      - ./rail-stream-promo-back/src/infrastructure/init-mongoDB.js:/docker-entrypoint-initdb.d/init-mongoDB.js    
+
+    ports:
+      - "27017:27017"
+
+    
+
   # Redis 
   redis-service:
     image: redis:7-alpine
@@ -17,23 +36,43 @@ services:
   # Celery
   celery-service:
     image: python:3.11.14-alpine3.23
-    container_name: celery-service
+    container_name: celery
     depends_on:
       - redis-service
 
     command: >
-      sh -c "pip install celery redis &&
-           celery -A CeleryClientConfig worker 
-           --loglevel=info 
-           --concurrency=2 
-           --queues=default 
-           --hostname=default_worker@%h"
+      sh -c "pip install celery redis && celery -A celery_client_config worker 
+          --loglevel=info 
+          --concurrency=2 
+          --queues=default 
+          --hostname=default_worker@%h"
+
+    #============================
+    # Обязателно должен быть .env файл в ./rail-stream-promo-back/infrastructure/
+    # c установлеными значениями (учитывать при Deployment)
+    
+    #------------При Тестировании-------------------
+    # CELERY_BROKER_URL_LOCALHOST -> Адресс используемого брокера Radis, RabbitMQ ... 
+    # CELERY_BACKEND_URL_LOCALHOST -> Адрес хранилища результатов выполнения задачь
+
+    #------------Для Celery worker-a в Docker контейнере-----------
+    # CELERY_BROKER_URL_DOCKER
+    # CELERY_BACKEND_URL_DOCKER
+
+    #-----------------Для task отправки сообщений/уведомлений----------
+    #(Одна из задачь сервиса это отправка сообщения на почту с уведомлением о заказе)
+    # EMAIL_NOTIFIER -> Почтовый адрес куда будет отправлено сообщение (Единый отправитель и получатель)
+    # PASSWORD_NOTIFIER -> Пароль
+    # PORT_NOTIFIER -> SMTP порт 
+    # HOST_NOTIFIER -> Используемый SMTP host, к примеру smtp.mail.ru
+    #============================
     volumes:
-      - ./rail-stream-promo-back/src/main/app/config/CeleryClientConfig.py:/app/CeleryClientConfig.py
-      - ./rail-stream-promo-back/src/main/app/config/CeleryTaskSchema.py:/app/CeleryTaskSchema.py
-      - ./rail-stream-promo-back/src/main/app/config/LoadEnvFile.py:/app/LoadEnvFile.py
+      - ./rail-stream-promo-back/src/main/app/config/celery_client_config.py:/app/celery_client_config.py
+      - ./rail-stream-promo-back/src/main/app/config/celery_task_schema.py:/app/celery_task_schema.py
+      - ./rail-stream-promo-back/src/main/app/config/load_env_file.py:/app/load_env_file.py
       - ./rail-stream-promo-back/src/infrastructure/conf.env:/app/conf.env
     working_dir: /app
 
 volumes:
   redis_data:
+  mongodb_data:

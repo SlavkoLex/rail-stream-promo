@@ -4,7 +4,7 @@ from email_validator import validate_email, EmailNotValidError
 # comprehensive verification of email 
 # by signature and availability
 #==========================
-def email_check(email: str):
+def email_check(email: str) -> bool:
 
     try:
         validate_email(email, check_deliverability=True)

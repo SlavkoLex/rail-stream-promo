@@ -1,5 +1,6 @@
 import os
 import glob
+from typing import Optional
 
 #======================================
 # Функция выполняет поиск файла *.env в каталоге проекта
@@ -11,30 +12,30 @@ import glob
 # по этому если вызов данного метода выполняется из кореневой директории "/"
 # то 1-й найденый файл .env (не относящийся к необходимому проекту) и будет считан
 #======================================
-def load_env_file():
+def load_env_file() -> None:
 
-    latest_catalog = "src"
+    latest_catalog: str = "src"
 
     #=====================================
     # Движение ВНИЗ по каталогам от точки 
     # вызова метода
     #=====================================
 
-    file_path = None
+    file_path: Optional[str] = None
     
     for file in glob.glob("**/*.env", recursive=True):
         file_path = file
 
-        if file_path != None: # Условие использования 1-го найденого файла
+        if file_path is not None: # Условие использования 1-го найденого файла
             file_path = os.path.abspath(file_path)
             break
 
 
-    if file_path == None:
+    if file_path is None:
 
-        level_up =  os.path.dirname(os.getcwd())
+        level_up: str = os.path.dirname(os.getcwd())
 
-        stop_search_flag = 0
+        stop_search_flag: int = 0
 
         #=================================================
         # Движение ВВЕРХ по каталогам от точки вызова метода
@@ -44,9 +45,9 @@ def load_env_file():
             if level_up.split("/")[-1] == latest_catalog:
                 stop_search_flag += 1
 
-            pattern = os.path.join(level_up, "**", "*.env")
+            pattern: str = os.path.join(level_up, "**", "*.env")
 
-            file_list = glob.glob(pattern, recursive=True)
+            file_list: list[str] = glob.glob(pattern, recursive=True)
 
             if file_list:
                 file_path = file_list[0]
@@ -63,9 +64,8 @@ def load_env_file():
         # Проброс исключения т.к. *.env 
         # файл не найден
         #==================================
-        if file_path == None:
+        if file_path is None:
             # TODO! Выбросить исключение о том, что в рабочем проекте нет файла .env
-
             pass
     
     #================================
