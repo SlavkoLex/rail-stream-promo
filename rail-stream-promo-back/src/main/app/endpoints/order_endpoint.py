@@ -30,14 +30,14 @@ async def register_order(request: Request,order: OrderModel) -> dict[str, int]:
         if mongo_result is None:
             #TODO: ЛОГИРОВАТЬ ОШИБКУ!!
             print("=======================")
-            print("The data is not saved!!")
+            print("Mongo Error: The data is not saved!!")
             print("=======================")
-
 
         #==============================
         # Send a message to the Mail Collector
         #==============================
         celery_client: Celery = request.app.state.celery.get_celery_object()
+
 
         try:
             celery_result: AsyncResult = celery_client.send_task(
@@ -51,27 +51,28 @@ async def register_order(request: Request,order: OrderModel) -> dict[str, int]:
         except OperationalError as e:
             #TODO: ЛОГИРОВАТЬ ОШИБКУ!!
             print("=======================")
-            print(f"Connection error with the Celery broker: {e}")
+            print(f"Celery Error: Connection error with the Celery broker -> {e}")
             print("=======================")
 
         except KombuError as ek:
             #TODO: ЛОГИРОВАТЬ ОШИБКУ!!
             print("=======================")
-            print(f"Routing error when sending a Celery worker task: {ek}")
+            print(f"Celery Error: Routing error when sending a Celery worker task -> {ek}")
             print("=======================")
 
         except Exception as ex:
             #TODO: ЛОГИРОВАТЬ ОШИБКУ!!
             print("=======================")
-            print(f"Serialization error, possible incorrect specification of arguments for the task {ex}")
+            print(f"Celery Error: Possible incorrect specification of arguments for the task -> {ex}")
             print("=======================")
+
             
         try:
             await request.app.state.celery.wait_task_result(celery_result.id)    
         except Exception as e:
             #TODO: ЛОГИРОВАТЬ ОШИБКУ!!
             print("=======================")
-            print(f"Getting the Celery result failed: {e}")
+            print(f"Celery Error: Getting the Celery result failed -> {e}")
             print("=======================")
 
         return {"success": 200}

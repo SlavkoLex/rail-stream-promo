@@ -76,9 +76,7 @@ class CustomCeleryClientManager:
             return None
         
         try:
-            celery_instance: Celery = Celery('celery_tasker')
-            celery_instance.conf.broker_url = broker_url_used
-            celery_instance.conf.result_backend = backend_url_used
+            celery_instance: Celery = Celery('celery_tasker',broker=broker_url_used, backend=backend_url_used)
         except Exception as e:
             print(f"Error creating Celery instance: {e}")
             return None
@@ -86,7 +84,6 @@ class CustomCeleryClientManager:
         celery_instance.conf.update(
 
             # Celery result sets
-            result_backend=backend_url_used,
             result_expires=3600,
             result_persistent=True,
             task_track_started=True,
@@ -124,7 +121,8 @@ class CustomCeleryClientManager:
         for key, value in CustomCeleryClientManager.__get_tasks_from_celery_task_schema().items():
             CustomCeleryClientManager.__task_registration_in_specified_queue(celery_instance, value, key, 'default')
 
-        return celery_instance
+
+        return celery_instance 
     
 
 
@@ -164,5 +162,5 @@ if os.path.exists('/app'):
 
 else:
     print("===============================")
-    print("Processing of the Celery module within the FastAPI application; Celery object not initialized")
+    print("Processing of the Celery module within the FastAPI application;")
     print("===============================")

@@ -24,8 +24,13 @@ if __name__ == "__main__":
     #===========================================
     load_env_file()
 
-    server_host: Optional[str] = os.getenv("UVICORN_SERVER_HOST")
-    server_port_row: Optional[str] = os.getenv("UVICORN_SERVER_PORT")
+
+    if os.path.exists('/.dockerenv'):
+        server_host: Optional[str] = os.getenv("UVICORN_SERVER_HOST_DOCKER")
+        server_port_row: Optional[str] = os.getenv("UVICORN_SERVER_PORT")
+    else:
+        server_host: Optional[str] = os.getenv("UVICORN_SERVER_HOST")
+        server_port_row: Optional[str] = os.getenv("UVICORN_SERVER_PORT")
 
     if not env_var_check(server_host, server_port_row):
         print("Error reading Uvicorn env variables!!")

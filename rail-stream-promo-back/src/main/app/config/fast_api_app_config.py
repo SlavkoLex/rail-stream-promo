@@ -21,7 +21,7 @@ async def lifespan(app_fastapi: FastAPI) -> AsyncIterator[None]:
     celery_client_manager: CustomCeleryClientManager = CustomCeleryClientManager()
 
     if celery_client_manager.get_celery_object() is None:
-        print("Celery initialization error!")
+        print("\nCelery initialization error!\n")
         sys.exit(1)
 
     app_fastapi.state.celery = celery_client_manager
@@ -30,8 +30,13 @@ async def lifespan(app_fastapi: FastAPI) -> AsyncIterator[None]:
     # Monitoring of the lifecycle 
     # MongoDB object
     #============================
-    mongo_host: Optional[str] = os.getenv('MONGO_HOST') # TODO: При развертывании в Docker (MONGO_DOCKER_HOST)
-    mongo_port_row: Optional[str] = os.getenv('MONGO_PORT')
+    if os.path.exists('/.dockerenv'):
+        mongo_host: Optional[str] = os.getenv('MONGO_DOCKER_HOST') 
+        mongo_port_row: Optional[str] = os.getenv('MONGO_PORT')
+    else:
+        mongo_host: Optional[str] = os.getenv('MONGO_HOST')
+        mongo_port_row: Optional[str] = os.getenv('MONGO_PORT')
+
     mongo_user: Optional[str] = os.getenv('MONGODB_USER')
     mongo_pass: Optional[str] = os.getenv('MONGODB_PASSWORD')
     mongo_auth_src: Optional[str] = os.getenv('MONGO_AUTH_SRC')
@@ -49,13 +54,13 @@ async def lifespan(app_fastapi: FastAPI) -> AsyncIterator[None]:
         mongo_database,
         mongo_collection):
 
-        print("Error reading Mongo env variables!!")
+        print("\nError reading Mongo env variables!!\n")
         sys.exit(1)
 
     try:
         mongo_port: int = int(mongo_port_row) 
     except ValueError:
-        print(f"Error: PORT_NOTIFIER must be integer, got {mongo_port_row}")
+        print(f"\nError: PORT_NOTIFIER must be integer, got {mongo_port_row}\n")
         sys.exit(1)
     
     try:
@@ -70,10 +75,11 @@ async def lifespan(app_fastapi: FastAPI) -> AsyncIterator[None]:
             collection_name = mongo_collection
         )
     except Exception as e:
-        print(f"Error creating MongoDB client: {e}")
+        print(f"\nError creating MongoDB client: There may be a problem with the Mongo container -> {e}\n")
         sys.exit(1)
 
     if await mongo_collection_client.test_connect() is None:
+        print("\n!!!!The request to the mongo container failed!!!\n")
         sys.exit(1)
 
 
