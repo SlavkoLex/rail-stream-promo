@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, Union
 from fastapi import APIRouter, Request
 from celery import Celery
 from bson.objectid import ObjectId
@@ -16,7 +16,7 @@ order_router = APIRouter(prefix="/api", tags=["orders"])
 # The main method that accepts the Order form
 #==============================
 @order_router.post("/save/form/order")
-async def register_order(request: Request,order: OrderModel) -> dict[str, int]:
+async def register_order(request: Request,order: OrderModel) -> dict[str, Union[str, int]]:
 
     validation_result = email_check(order.model_dump().get("email"))
 
@@ -32,6 +32,14 @@ async def register_order(request: Request,order: OrderModel) -> dict[str, int]:
             print("=======================")
             print("Mongo Error: The data is not saved!!")
             print("=======================")
+
+            return {
+                        "type": "https://api.example.com/errors", # TODO: Описать ошибку в документации 
+                        "title": "Database Error",
+                        "status": 500,
+                        "detail": "The order data could not be saved. Try again later",
+                        "instance": "/api/save/form/order"
+                    }
 
         #==============================
         # Send a message to the Mail Collector
@@ -75,7 +83,27 @@ async def register_order(request: Request,order: OrderModel) -> dict[str, int]:
             print(f"Celery Error: Getting the Celery result failed -> {e}")
             print("=======================")
 
-        return {"success": 200}
+        return {
+                "data": {
+                    "id": "user_789",                    
+                    "email": order.model_dump().get("email"),
+                    "organization": order.model_dump().get("organization"),
+                    "phone": order.model_dump().get("phone"),                        
+                    "product": order.model_dump().get("product"),
+                    "createdAt": order.model_dump().get("timestamp")   
+                    }
+                }
     
     else:
-        {"email invalid": 400}
+        return {
+                "type": "https://api.example.com/errors", # TODO: Описать ошибку в документации
+                "status": 400,
+                "detail": "The email value is not valid",
+                "instance": "/api/save/form/order",
+                "errors": [
+                        {
+                        "field": "email",
+                        "message": "incorrect format"
+                        }
+                    ]
+                }
