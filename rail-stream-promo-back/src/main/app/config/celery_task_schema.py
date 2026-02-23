@@ -14,7 +14,8 @@ def send_gmail_notification_about_order(
         organization: str, 
         cient_phone: str) -> bool:
 
-    port_row: Optional[str] = int(os.getenv('PORT_NOTIFIER')) 
+
+    port_row: Optional[str] = os.getenv('PORT_NOTIFIER') 
     host: Optional[str] = os.getenv('HOST_NOTIFIER')
 
     sender_email: Optional[str] = os.getenv('EMAIL_NOTIFIER')
