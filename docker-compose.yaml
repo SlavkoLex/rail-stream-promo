@@ -77,7 +77,7 @@ services:
     volumes:
       - ./rail-stream-promo-back/src/main/app/config/celery_client_config.py:/app/celery_client_config.py
       - ./rail-stream-promo-back/src/main/app/config/celery_task_schema.py:/app/celery_task_schema.py
-      - ./rail-stream-promo-back/src/main/app/config/load_env_file.py:/app/load_env_file.py
+      - ./rail-stream-promo-back/src/main/app/utils/load_env_file.py:/app/load_env_file.py
       - ./rail-stream-promo-back/src/config_assets/conf.env:/app/conf.env
     working_dir: /app
 

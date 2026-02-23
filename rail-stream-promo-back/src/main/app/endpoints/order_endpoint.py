@@ -1,5 +1,6 @@
 from typing import Optional, Union
 from fastapi import APIRouter, Request
+from fastapi.responses import JSONResponse
 from celery import Celery
 from bson.objectid import ObjectId
 from celery.result import AsyncResult
@@ -7,7 +8,9 @@ from celery.exceptions import OperationalError
 from kombu.exceptions import OperationalError as KombuError
 
 from data.models.order_model import OrderModel
-from services.tools.email_checker import email_check
+from data.models.error_response_model import ErrorResponse
+from data.models.success_response_model import SuccessResponseData, SuccessResponse
+from utils.email_checker import email_check
 
 
 order_router = APIRouter(prefix="/api", tags=["orders"])
@@ -18,7 +21,13 @@ order_router = APIRouter(prefix="/api", tags=["orders"])
 @order_router.post("/save/form/order")
 async def register_order(request: Request,order: OrderModel) -> dict[str, Union[str, int]]:
 
+    #===============================
+    #email address validation
+    #===============================
     validation_result = email_check(order.model_dump().get("email"))
+
+    #TODO: Добавить валидацию оргинизации и номера телефона при условии что данные поля не None !!!!!
+
 
     if validation_result:
 
@@ -33,13 +42,17 @@ async def register_order(request: Request,order: OrderModel) -> dict[str, Union[
             print("Mongo Error: The data is not saved!!")
             print("=======================")
 
-            return {
-                        "type": "https://api.example.com/errors", # TODO: Описать ошибку в документации 
-                        "title": "Database Error",
-                        "status": 500,
-                        "detail": "The order data could not be saved. Try again later",
-                        "instance": "/api/save/form/order"
-                    }
+            error_response = ErrorResponse(
+                title="Database Error",
+                status=500,
+                detail="The order data could not be saved. Try again later",
+                instance="/api/save/form/order"
+            )
+
+            return JSONResponse(
+                status_code=error_response.status,
+                content=error_response.model_dump()
+            )
 
         #==============================
         # Send a message to the Mail Collector
@@ -83,27 +96,30 @@ async def register_order(request: Request,order: OrderModel) -> dict[str, Union[
             print(f"Celery Error: Getting the Celery result failed -> {e}")
             print("=======================")
 
-        return {
-                "data": {
-                    "id": "user_789",                    
-                    "email": order.model_dump().get("email"),
-                    "organization": order.model_dump().get("organization"),
-                    "phone": order.model_dump().get("phone"),                        
-                    "product": order.model_dump().get("product"),
-                    "createdAt": order.model_dump().get("timestamp")   
-                    }
-                }
+        success_response = SuccessResponse(
+            data=SuccessResponseData(
+                email=order.model_dump().get("email"),
+                organization=order.model_dump().get("organization"),
+                phone=order.model_dump().get("phone"),
+                product=order.model_dump().get("product"),
+                createdAt=order.model_dump().get("timestamp").strftime("%Y-%m-%d %H:%M:%S")
+            )
+        )
+
+        return JSONResponse(
+                content=success_response.model_dump()
+            )
     
     else:
-        return {
-                "type": "https://api.example.com/errors", # TODO: Описать ошибку в документации
-                "status": 400,
-                "detail": "The email value is not valid",
-                "instance": "/api/save/form/order",
-                "errors": [
-                        {
-                        "field": "email",
-                        "message": "incorrect format"
-                        }
-                    ]
-                }
+
+        error_response = ErrorResponse(
+                title="Email Error",
+                status=400,
+                detail="The email value is not valid",
+                instance="/api/save/form/order"
+        )
+
+        return JSONResponse(
+                status_code=error_response.status,
+                content=error_response.model_dump()
+            )

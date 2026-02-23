@@ -8,7 +8,7 @@ from .celery_client_config import CustomCeleryClientManager
 from .mongo_db_config import AsyncMongoDBCollection
 from data.repository.order_repository import OrderRepository
 from endpoints.order_endpoint import order_router
-from services.tools.env_var_checker import env_var_check
+from utils.env_var_checker import env_var_check
 
 
 @asynccontextmanager

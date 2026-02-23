@@ -21,7 +21,7 @@ if os.path.exists('/app'):
 #=======================================
 else:
     from .celery_task_schema import *
-    from .load_env_file import load_env_file
+    from utils.load_env_file import load_env_file
     load_env_file()
 
 class CustomCeleryClientManager:
