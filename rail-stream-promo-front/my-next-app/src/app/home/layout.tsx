@@ -2,6 +2,7 @@ import { Inter } from "next/font/google";
 
 import Header from "@/components/home/Header";
 import Footer from "@/components/home/Footer";
+import EmergencePage from "@/components/effects/Emergence";
 
 import "@/app/globals.css";
 
@@ -19,17 +20,19 @@ export default function HomeLayout({
         <meta name="viewport" content="width=device-width, initial-scale=1" />
       </head>
       <body className={[inter.className, 'body'].join(' ')}>
-        <div className="flex-main-container">
+        <EmergencePage>
+          <div className="flex-main-container">
 
-          <Header />
+            <Header />
 
-          <div className="home-page-content">
-            <main>{children}</main>
+            <div className="home-page-content">
+              <main>{children}</main>
+            </div>
+
+            <Footer />
+
           </div>
-
-          <Footer />
-
-        </div>
+        </EmergencePage>
       </body>
     </html>
   );

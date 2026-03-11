@@ -3,6 +3,8 @@ import headerBackgroundImage from '@/assets/pages/home/images/header/Image.png'
 import logo from '@/assets/pages/home/images/header/logo.png'
 import bar from '@/assets/pages/home/images/header/bar.png'
 
+import FloatingText from "@/components/effects/Floating";
+
 import Image from 'next/image';
 
 export default function Header() {
@@ -52,14 +54,17 @@ export default function Header() {
           {/* ================== Text ===================*/}
 
           <div className={styles.textContainer}>
-
+            
             <div className={styles.sloganBlock}>
-                <p className={styles.sloganPromoTextStyle}>
-                  цифровизация и автоматизация путей <br></br> железнодорожного сообщения
-                </p>
-                <p className={styles.sloganMainTextStyle}>
-                  Железные дороги <br></br> Умные решения
-                </p>
+                
+                <FloatingText>
+                  <p className={styles.sloganPromoTextStyle}>
+                    цифровизация и автоматизация путей <br></br> железнодорожного сообщения
+                  </p>
+                  <p className={styles.sloganMainTextStyle}>
+                    Железные дороги <br></br> Умные решения
+                  </p>
+                </FloatingText>
             </div>
 
             <div className={styles.barBlock}>
@@ -73,12 +78,14 @@ export default function Header() {
             </div>
 
             <div className={styles.companyNameBlock}>
+              <FloatingText>
                 <p className={styles.companyNamePromoTextStyle}>
                   научно-внедренческий центр
                 </p>
                 <p className={styles.companyNameMainTextStyle}>
                   БЕЗОПАСТНОСТЬ ТРАНСПОРТА
                 </p>
+              </FloatingText>
             </div>
 
           </div>
