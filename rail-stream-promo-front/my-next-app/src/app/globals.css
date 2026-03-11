@@ -1,0 +1,19 @@
+.body {
+  margin: 0;              /* убираем отступы */
+  padding: 0;
+  width: 100%;            /* можно и не указывать */
+  overflow-x: hidden;     /* предотвращаем горизонтальный скролл */
+}
+
+.flex-main-container {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+.home-page-content {
+  background-color: white;
+  color: black;
+  border: 2px solid #000000;
+}
+
